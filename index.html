@@ -11,7 +11,6 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            overflow: hidden;
         }
         .font-mono {
             font-family: 'Roboto Mono', monospace;
@@ -31,7 +30,7 @@
 </head>
 <body class="bg-gray-900 text-gray-300 antialiased">
 
-    <div class="flex flex-col h-screen">
+    <div class="flex flex-col min-h-screen">
         
         <!-- Contenedor principal: se apila en móvil (flex-col), horizontal en pantallas medianas+ (md:flex-row) -->
         <main class="flex-grow flex flex-col md:flex-row gap-2 p-2">
@@ -97,11 +96,13 @@
                     </div>
                     <!-- Columna Derecha: Botones de Acción y Ecuaciones -->
                     <div class="flex flex-col justify-between">
-                         <div class="grid grid-cols-2 lg:grid-cols-4 gap-2">
-                            <button id="play-pause" class="col-span-2 lg:col-span-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-3 rounded-md transition-colors text-sm">Animar</button>
-                            <button id="clear-graphs" class="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-3 rounded-md transition-colors text-sm" title="Limpiar gráficas">Limpiar</button>
-                            <button id="reset-all" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-3 rounded-md transition-colors text-sm" title="Valores iniciales">Reinicio</button>
-                            <button id="info-btn" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-3 rounded-md transition-colors text-sm" title="Información">Info</button>
+                         <div class="flex flex-col lg:grid lg:grid-cols-4 gap-2">
+                            <button id="play-pause" class="w-full lg:col-span-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-3 rounded-md transition-colors text-sm">Animar</button>
+                            <div class="grid grid-cols-3 lg:col-span-3 gap-2">
+                                <button id="clear-graphs" class="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-3 rounded-md transition-colors text-sm" title="Limpiar gráficas">Limpiar</button>
+                                <button id="reset-all" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-3 rounded-md transition-colors text-sm" title="Valores iniciales">Reinicio</button>
+                                <button id="info-btn" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-3 rounded-md transition-colors text-sm" title="Información">Info</button>
+                            </div>
                         </div>
                         <div id="equations" class="mt-2 pt-2 border-t border-gray-700 flex flex-col justify-center items-center gap-y-1 text-center text-xs lg:text-sm font-mono">
                         </div>
