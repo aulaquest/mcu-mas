@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulación M.A.S. (Final)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+        }
+        .font-mono {
+            font-family: 'Roboto Mono', monospace;
+        }
+        .pulsador-btn {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.25rem;
+            line-height: 1;
+            transition: background-color 0.15s ease;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-300 antialiased">
+
+    <div class="flex flex-col h-screen">
+        
+        <!-- Contenedor principal con layout horizontal fijo -->
+        <main class="flex-grow flex flex-row gap-2 p-2">
+            <div class="w-2/5 rounded-lg border border-gray-700 relative" style="background-color: #2a2721;">
+                <canvas id="ucmCanvas"></canvas>
+            </div>
+            <div class="w-3/5 rounded-lg border border-gray-700" style="background-color: #1c2532;">
+                <canvas id="graphCanvas"></canvas>
+            </div>
+        </main>
+
+        <footer class="bg-gray-800 border-t border-gray-700 p-3 shadow-lg">
+            <div class="container mx-auto max-w-7xl">
+                <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-4">
+                    <!-- Controles -->
+                    <div>
+                        <label class="block text-center text-xs font-medium text-gray-400 mb-1">Amplitud (m)</label>
+                        <div class="flex items-center justify-center gap-2">
+                            <button id="radius-minus" class="pulsador-btn bg-gray-600 hover:bg-gray-700 rounded-md">-</button>
+                            <span id="radius-value" class="font-mono text-lg font-semibold text-blue-400 w-16 text-center">3.00</span>
+                            <button id="radius-plus" class="pulsador-btn bg-gray-600 hover:bg-gray-700 rounded-md">+</button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-center text-xs font-medium text-gray-400 mb-1">Período (s)</label>
+                        <div class="flex items-center justify-center gap-2">
+                            <button id="period-minus" class="pulsador-btn bg-gray-600 hover:bg-gray-700 rounded-md">-</button>
+                            <span id="period-value" class="font-mono text-lg font-semibold text-blue-400 w-16 text-center">5.00</span>
+                            <button id="period-plus" class="pulsador-btn bg-gray-600 hover:bg-gray-700 rounded-md">+</button>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="direction" class="block text-center text-xs font-medium text-gray-400 mb-1">Sentido</label>
+                        <select id="direction" class="w-full py-2 px-2 text-sm bg-gray-700 border-gray-600 text-white rounded-md focus:ring-blue-500 focus:border-blue-500">
+                            <option value="1">Antihorario</option>
+                            <option value="-1">Horario</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="view" class="block text-center text-xs font-medium text-gray-400 mb-1">Gráfica</label>
+                        <select id="view" class="w-full py-2 px-2 text-sm bg-gray-700 border-gray-600 text-white rounded-md focus:ring-blue-500 focus:border-blue-500">
+                            <option value="position">Posición (y)</option>
+                            <option value="velocity">Velocidad (v)</option>
+                            <option value="acceleration">Aceleración (a)</option>
+                            <option value="all">Todo</option>
+                        </select>
+                    </div>
+                    <div class="col-span-2 md:col-span-4 lg:col-span-1 flex items-end justify-center gap-2">
+                        <button id="play-pause" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-3 rounded-md transition-colors text-sm">Animar</button>
+                        <button id="reset-time" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-3 rounded-md transition-colors text-sm" title="Reiniciar tiempo">t=0</button>
+                        <button id="clear-graphs" class="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-3 rounded-md transition-colors text-sm" title="Limpiar gráficas">Limpiar</button>
+                        <button id="reset-all" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-3 rounded-md transition-colors text-sm" title="Valores iniciales">Inicio</button>
+                    </div>
+                </div>
+                <!-- Ecuaciones -->
+                <div id="equations" class="mt-3 pt-3 border-t border-gray-700 flex flex-col lg:flex-row lg:flex-wrap justify-center items-center gap-y-1 lg:gap-x-6 text-center text-xs lg:text-sm font-mono">
+                </div>
+                 <!-- Footer -->
+                <div class="text-center mt-3 pt-2 border-t border-gray-700">
+                    <a href="https://aulaquest.com" target="_blank" rel="noopener noreferrer" class="text-xs text-gray-500 hover:text-gray-400 transition-colors">
+                        © Creado por AulaQuest
+                    </a>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const ucmCanvas = document.getElementById('ucmCanvas');
+            const graphCanvas = document.getElementById('graphCanvas');
+            const ucmCtx = ucmCanvas.getContext('2d');
+            const graphCtx = graphCanvas.getContext('2d');
+
+            // --- Controles ---
+            const radiusValueSpan = document.getElementById('radius-value');
+            const periodValueSpan = document.getElementById('period-value');
+            const directionSelect = document.getElementById('direction');
+            const viewSelect = document.getElementById('view');
+            const playPauseBtn = document.getElementById('play-pause');
+            const resetTimeBtn = document.getElementById('reset-time');
+            const clearGraphsBtn = document.getElementById('clear-graphs');
+            const resetAllBtn = document.getElementById('reset-all');
+            const equationsDiv = document.getElementById('equations');
+            
+            // --- Estado de la simulación ---
+            let state = {};
+            let graphHistory = { y: [], v: [], a: [] };
+            let animationFrameId;
+            let lastTimestamp = 0;
+            const RADIUS_STEP = 0.1;
+            const PERIOD_STEP = 0.1;
+            const WORLD_HEIGHT_UNITS = 5.0; // Max radius visible
+            
+            const colors = {
+                ucmBg: '#2a2721', graphBg: '#1c2532', grid: '#4a4a4a', axis: '#888888', text: '#d1d5db',
+                mcuCircle: '#60a5fa', mcuPoint: '#facc15', mcuPointStroke: '#ca8a04',
+                masPoint: '#4ade80', masPointStroke: '#16a34a', projectionLine: '#888888',
+                vectorPos: '#a7f3d0', // mint
+                vectorVelMCU: '#c4b5fd', // violet
+                vectorAccMCU: '#fdba74', // orange
+                vectorVelMAS: '#ef4444', vectorAccMAS: '#15803d',
+                graph: { position: '#3b82f6', velocity: '#ef4444', acceleration: '#22c55e' }
+            };
+
+            function getInitialState() {
+                return {
+                    radius: 3.0, period: 5.0, direction: 1, view: 'position',
+                    time: 0, isRunning: false,
+                };
+            }
+
+            // --- Lógica de la Simulación ---
+            function updateCalculations() {
+                state.omega = state.direction * (2 * Math.PI) / state.period;
+                state.frequency = 1 / state.period;
+                state.angle = state.omega * state.time;
+                // MCU vectors
+                state.mcu_x = state.radius * Math.cos(state.angle);
+                state.mcu_y = state.radius * Math.sin(state.angle);
+                state.mcu_vx = -state.omega * state.radius * Math.sin(state.angle);
+                state.mcu_vy = state.omega * state.radius * Math.cos(state.angle);
+                state.mcu_ax = -Math.pow(state.omega, 2) * state.mcu_x;
+                state.mcu_ay = -Math.pow(state.omega, 2) * state.mcu_y;
+                // MAS projections
+                state.y = state.mcu_y;
+                state.v = state.mcu_vy;
+                state.a = state.mcu_ay;
+            }
+
+            function updateUI() {
+                radiusValueSpan.textContent = state.radius.toFixed(2);
+                periodValueSpan.textContent = state.period.toFixed(2);
+
+                const A = state.radius.toFixed(2);
+                const w_val = state.omega.toFixed(2);
+                const v_max = (state.radius * Math.abs(state.omega)).toFixed(2);
+                const a_max = (state.radius * Math.pow(state.omega, 2)).toFixed(2);
+                
+                equationsDiv.innerHTML = `
+                    <span class="text-blue-400">y(t) = ${A} · sen(${w_val}·t)</span>
+                    <span class="text-red-400">v(t) = ${v_max} · cos(${w_val}·t)</span>
+                    <span class="text-green-400">a(t) = -${a_max} · sen(${w_val}·t)</span>
+                `;
+            }
+            
+            // --- Funciones de Dibujo ---
+            function resizeCanvases() {
+                [ucmCanvas, graphCanvas].forEach(canvas => {
+                    const parent = canvas.parentElement;
+                    const dpr = window.devicePixelRatio || 1;
+                    canvas.width = parent.clientWidth * dpr;
+                    canvas.height = parent.clientHeight * dpr;
+                    canvas.style.width = `${parent.clientWidth}px`;
+                    canvas.style.height = `${parent.clientHeight}px`;
+                    canvas.getContext('2d').scale(dpr, dpr);
+                });
+                drawAll();
+            }
+
+            function drawGrid(ctx, width, height, unitSizeX, unitSizeY) {
+                ctx.strokeStyle = colors.grid; ctx.lineWidth = 0.5;
+                for (let x = unitSizeX; x < width; x += unitSizeX) {
+                    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, height); ctx.stroke();
+                }
+                for (let y = unitSizeY; y < height; y += unitSizeY) {
+                    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke();
+                }
+            }
+
+            function drawArrow(ctx, fromx, fromy, tox, toy, color, label = '') {
+                const headlen = 8;
+                const dx = tox - fromx;
+                const dy = toy - fromy;
+                const angle = Math.atan2(dy, dx);
+                ctx.strokeStyle = color; ctx.lineWidth = 2.5;
+                ctx.beginPath();
+                ctx.moveTo(fromx, fromy); ctx.lineTo(tox, toy);
+                ctx.lineTo(tox - headlen * Math.cos(angle - Math.PI / 6), toy - headlen * Math.sin(angle - Math.PI / 6));
+                ctx.moveTo(tox, toy);
+                ctx.lineTo(tox - headlen * Math.cos(angle + Math.PI / 6), toy - headlen * Math.sin(angle + Math.PI / 6));
+                ctx.stroke();
+
+                if (label) {
+                    ctx.fillStyle = color;
+                    ctx.font = 'bold 14px Inter';
+                    ctx.save();
+                    ctx.translate(tox + Math.cos(angle) * 10, toy + Math.sin(angle) * 10);
+                    ctx.fillText(label, 0, 0);
+                    ctx.restore();
+                }
+            }
+
+            function drawAll() {
+                updateCalculations();
+                updateUI();
+                drawUCM();
+                drawGraph();
+            }
+
+            function drawUCM() {
+                const ctx = ucmCtx;
+                const width = ucmCanvas.parentElement.clientWidth;
+                const height = ucmCanvas.parentElement.clientHeight;
+                ctx.fillStyle = colors.ucmBg; ctx.fillRect(0, 0, width, height);
+
+                const centerX = width / 2;
+                const centerY = height / 2;
+                const scale = (height / 2) / WORLD_HEIGHT_UNITS; // Consistent vertical scale
+
+                drawGrid(ctx, width, height, scale, scale);
+
+                ctx.strokeStyle = colors.axis; ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(0, centerY); ctx.lineTo(width, centerY);
+                ctx.moveTo(centerX, 0); ctx.lineTo(centerX, height);
+                ctx.stroke();
+                
+                ctx.fillStyle = colors.text; ctx.font = '12px Inter';
+                ctx.textAlign = 'left'; ctx.fillText('y (m)', centerX + 8, 12);
+                ctx.textAlign = 'center'; ctx.fillText('x (m)', width - 20, centerY - 8);
+
+                ctx.strokeStyle = colors.mcuCircle; ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.arc(centerX, centerY, state.radius * scale, 0, 2 * Math.PI); ctx.stroke();
+
+                const canvasX = centerX + state.mcu_x * scale;
+                const canvasY = centerY - state.mcu_y * scale;
+
+                ctx.strokeStyle = colors.projectionLine; ctx.setLineDash([4, 4]);
+                ctx.beginPath();
+                ctx.moveTo(canvasX, canvasY); ctx.lineTo(width, canvasY);
+                ctx.stroke(); ctx.setLineDash([]);
+
+                const vectorScale = scale * 0.4;
+                drawArrow(ctx, centerX, centerY, canvasX, canvasY, colors.vectorPos);
+                if (state.view === 'velocity' || state.view === 'all') {
+                    drawArrow(ctx, canvasX, canvasY, canvasX + state.mcu_vx * vectorScale, canvasY - state.mcu_vy * vectorScale, colors.vectorVelMCU, 'v');
+                }
+                if (state.view === 'acceleration' || state.view === 'all') {
+                    drawArrow(ctx, canvasX, canvasY, canvasX + state.mcu_ax * vectorScale, canvasY - state.mcu_ay * vectorScale, colors.vectorAccMCU, 'a');
+                }
+
+                if (state.view === 'velocity' || state.view === 'all') {
+                    drawArrow(ctx, centerX, canvasY, centerX, canvasY - state.v * vectorScale, colors.vectorVelMAS);
+                }
+                if (state.view === 'acceleration' || state.view === 'all') {
+                     drawArrow(ctx, centerX, canvasY, centerX, canvasY - state.a * vectorScale, colors.vectorAccMAS);
+                }
+
+                ctx.fillStyle = colors.mcuPoint; ctx.strokeStyle = colors.mcuPointStroke; ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.arc(canvasX, canvasY, 6, 0, 2 * Math.PI); ctx.fill(); ctx.stroke();
+
+                ctx.fillStyle = colors.masPoint; ctx.strokeStyle = colors.masPointStroke; ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.arc(centerX, canvasY, 6, 0, 2 * Math.PI); ctx.fill(); ctx.stroke();
+                
+                ctx.fillStyle = colors.text; ctx.font = '14px Inter';
+                ctx.textAlign = 'left'; ctx.fillText(`t = ${state.time.toFixed(2)} s`, 10, 20);
+                ctx.fillText(`θ = ${state.angle.toFixed(2)} rad`, 10, 40);
+                ctx.textAlign = 'right'; ctx.fillText(`f = ${state.frequency.toFixed(2)} Hz`, width - 10, 20);
+            }
+
+            function drawGraph() {
+                const ctx = graphCtx;
+                const width = graphCanvas.parentElement.clientWidth;
+                const height = graphCanvas.parentElement.clientHeight;
+                ctx.fillStyle = colors.graphBg; ctx.fillRect(0, 0, width, height);
+
+                const padding = { top: 20, right: 20, bottom: 30, left: 40 };
+                const graphWidth = width - padding.left - padding.right;
+                const originX = padding.left;
+                const originY = height / 2;
+
+                const timeWindow = state.period * 2.5;
+                const timeScale = graphWidth / timeWindow;
+                const timeOffset = Math.max(0, state.time - timeWindow);
+                
+                const y_scale = (height / 2) / WORLD_HEIGHT_UNITS; // Consistent vertical scale
+                const maxVal = state.radius;
+                
+                const gridYUnit = 1.0;
+                drawGrid(ctx, width, height, timeScale * state.period / 2, y_scale * gridYUnit);
+
+                const currentYOnGraph = originY - state.y * y_scale;
+                ctx.strokeStyle = colors.projectionLine; ctx.setLineDash([4, 4]);
+                ctx.beginPath(); ctx.moveTo(0, currentYOnGraph); ctx.lineTo(originX + (state.time - timeOffset) * timeScale, currentYOnGraph); ctx.stroke(); ctx.setLineDash([]);
+
+                ctx.strokeStyle = colors.axis; ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(padding.left, originY); ctx.lineTo(width - padding.right, originY);
+                ctx.moveTo(padding.left, padding.top); ctx.lineTo(padding.left, height - padding.bottom);
+                ctx.stroke();
+                
+                ctx.fillStyle = colors.text; ctx.font = '12px Inter'; ctx.textAlign = 'center';
+                const firstLabelTime = Math.ceil(timeOffset / (state.period / 2)) * (state.period / 2);
+                for (let t = firstLabelTime; t < timeOffset + timeWindow; t += state.period / 2) {
+                    ctx.fillText(t.toFixed(1), originX + (t - timeOffset) * timeScale, originY + 15);
+                }
+                ctx.textAlign = 'right';
+                ctx.fillText("t (s)", width - padding.right, originY + 25);
+                
+                const yLabelMax = WORLD_HEIGHT_UNITS;
+                for (let val = -yLabelMax; val <= yLabelMax; val += gridYUnit) {
+                    if (val === 0) continue;
+                     ctx.fillText(val.toFixed(1), padding.left - 5, originY - val * y_scale);
+                }
+                ctx.fillText('0', padding.left - 5, originY + 5);
+
+                const max_v = state.radius * Math.abs(state.omega);
+                const max_a = state.radius * Math.pow(state.omega, 2);
+                
+                const views = state.view === 'all' ? ['position', 'velocity', 'acceleration'] : [state.view];
+                
+                views.forEach(v => {
+                    let data, color, value_scale;
+                    if (v === 'position') { data = graphHistory.y; color = colors.graph.position; value_scale = 1; }
+                    if (v === 'velocity') { data = graphHistory.v; color = colors.graph.velocity; value_scale = maxVal / max_v; }
+                    if (v === 'acceleration') { data = graphHistory.a; color = colors.graph.acceleration; value_scale = maxVal / max_a; }
+
+                    ctx.fillStyle = color;
+                    data.forEach(point => {
+                        const x = originX + (point.t - timeOffset) * timeScale;
+                        if (x >= originX && x < width - padding.right) {
+                            const y = originY - (point.val * value_scale) * y_scale;
+                            ctx.beginPath(); ctx.arc(x, y, 1.5, 0, 2 * Math.PI); ctx.fill();
+                        }
+                    });
+                });
+            }
+
+            // --- Controladores ---
+            function handleControlChange() {
+                state.direction = parseInt(directionSelect.value);
+                state.view = viewSelect.value;
+                if (!state.isRunning) drawAll();
+            }
+            
+            function modifyValue(key, step, min, max) {
+                state[key] = Math.max(min, Math.min(max, state[key] + step));
+                if (!state.isRunning) { clearGraphs(); drawAll(); }
+            }
+
+            function playPause() {
+                state.isRunning = !state.isRunning;
+                playPauseBtn.textContent = state.isRunning ? 'Pausar' : 'Animar';
+                playPauseBtn.classList.toggle('bg-blue-600', !state.isRunning);
+                playPauseBtn.classList.toggle('hover:bg-blue-700', !state.isRunning);
+                playPauseBtn.classList.toggle('bg-orange-500', state.isRunning);
+                playPauseBtn.classList.toggle('hover:bg-orange-600', state.isRunning);
+                if (state.isRunning) {
+                    lastTimestamp = performance.now();
+                    animationFrameId = requestAnimationFrame(animationLoop);
+                } else {
+                    cancelAnimationFrame(animationFrameId);
+                }
+            }
+            
+            function resetTime() { state.time = 0; clearGraphs(); drawAll(); }
+            function clearGraphs() {
+                graphHistory = { y: [], v: [], a: [] };
+                if (!state.isRunning) drawGraph();
+            }
+            function resetAll() {
+                if (state.isRunning) playPause();
+                state = getInitialState();
+                directionSelect.value = state.direction;
+                viewSelect.value = state.view;
+                clearGraphs();
+                drawAll();
+            }
+            
+            // --- Bucle de Animación ---
+            function animationLoop(timestamp) {
+                if (!state.isRunning) return;
+                const deltaTime = (timestamp - lastTimestamp) / 1000;
+                lastTimestamp = timestamp;
+                state.time += deltaTime;
+                
+                updateCalculations();
+                graphHistory.y.push({ t: state.time, val: state.y });
+                graphHistory.v.push({ t: state.time, val: state.v });
+                graphHistory.a.push({ t: state.time, val: state.a });
+
+                const timeWindow = state.period * 2.5;
+                const cutoffTime = state.time - timeWindow - state.period; 
+                if (graphHistory.y[0] && graphHistory.y[0].t < cutoffTime) {
+                    graphHistory.y.shift();
+                    graphHistory.v.shift();
+                    graphHistory.a.shift();
+                }
+                
+                updateUI();
+                drawUCM();
+                drawGraph();
+                animationFrameId = requestAnimationFrame(animationLoop);
+            }
+            
+            // --- Inicialización ---
+            function init() {
+                directionSelect.addEventListener('input', handleControlChange);
+                viewSelect.addEventListener('input', handleControlChange);
+                document.getElementById('radius-minus').addEventListener('click', () => modifyValue('radius', -RADIUS_STEP, 0.1, 5));
+                document.getElementById('radius-plus').addEventListener('click', () => modifyValue('radius', RADIUS_STEP, 0.1, 5));
+                document.getElementById('period-minus').addEventListener('click', () => modifyValue('period', -PERIOD_STEP, 0.2, 16));
+                document.getElementById('period-plus').addEventListener('click', () => modifyValue('period', PERIOD_STEP, 0.2, 16));
+                
+                playPauseBtn.addEventListener('click', playPause);
+                resetTimeBtn.addEventListener('click', resetTime);
+                clearGraphsBtn.addEventListener('click', clearGraphs);
+                resetAllBtn.addEventListener('click', resetAll);
+
+                window.addEventListener('resize', resizeCanvases);
+                resetAll();
+                resizeCanvases();
+            }
+
+            init();
+        });
+    </script>
+</body>
+</html>
