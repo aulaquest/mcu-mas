@@ -32,7 +32,6 @@
 
     <div class="flex flex-col h-screen">
         
-        <!-- Contenedor principal: se apila en móvil (flex-col), horizontal en pantallas medianas+ (md:flex-row) -->
         <main class="flex-grow flex flex-col md:flex-row gap-2 p-2">
             <div class="w-full md:w-2/5 h-1/2 md:h-full rounded-lg border border-gray-700 relative" style="background-color: #2a2721;">
                 <canvas id="ucmCanvas"></canvas>
@@ -45,9 +44,7 @@
         <footer class="bg-gray-800 border-t border-gray-700 p-3 shadow-lg flex-shrink-0">
             <div class="container mx-auto max-w-7xl">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    <!-- Columna Izquierda: Pulsadores y Selectores -->
                     <div class="grid grid-cols-2 gap-4">
-                        <!-- Pulsadores -->
                         <div>
                             <label class="block text-center text-xs font-medium text-gray-400 mb-1">Radio (m)</label>
                             <div class="flex items-center justify-center gap-2">
@@ -64,7 +61,6 @@
                                 <button id="period-plus" class="pulsador-btn bg-gray-600 hover:bg-gray-700 rounded-md">+</button>
                             </div>
                         </div>
-                        <!-- Selectores -->
                         <div class="col-span-2 grid grid-cols-3 gap-2">
                              <div>
                                 <label for="phase" class="block text-center text-xs font-medium text-gray-400 mb-1">Fase (φ)</label>
@@ -94,7 +90,6 @@
                             </div>
                         </div>
                     </div>
-                    <!-- Columna Derecha: Botones de Acción y Ecuaciones -->
                     <div class="flex flex-col justify-between">
                          <div class="grid grid-cols-1 lg:grid-cols-4 gap-2">
                             <button id="play-pause" class="w-full lg:col-span-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-3 rounded-md transition-colors text-sm">Animar</button>
@@ -108,8 +103,7 @@
                         </div>
                     </div>
                 </div>
-                 <!-- Footer -->
-                <div class="text-center mt-3 pt-2 border-t border-gray-700">
+                 <div class="text-center mt-3 pt-2 border-t border-gray-700">
                     <a href="https://aulaquest.com" target="_blank" rel="noopener noreferrer" class="text-xs text-gray-500 hover:text-gray-400 transition-colors">
                         © Creado por AulaQuest
                     </a>
@@ -118,7 +112,6 @@
         </footer>
     </div>
     
-    <!-- Modal de Información -->
     <div id="info-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 hidden">
         <div class="bg-gray-800 border border-gray-700 rounded-2xl shadow-xl max-w-2xl w-full flex flex-col max-h-[90vh]">
             <h2 class="text-xl font-bold p-6 border-b border-gray-700 text-white">Sobre la Simulación</h2>
@@ -187,8 +180,8 @@
             
             const colors = {
                 ucmBg: '#2a2721', graphBg: '#1c2532', grid: '#4a4a4a', axis: '#888888', text: '#d1d5db',
-                mcuCircle: '#60a5fa', mcuPoint: '#facc15', mcuPointStroke: '#ca8a04',
-                masPoint: '#4ade80', masPointStroke: '#16a34a', projectionLine: '#888888',
+                mcuCircle: '#60a5fa', mcuPoint: '#4ade80', mcuPointStroke: '#16a34a', // AHORA VERDE
+                masPoint: '#facc15', masPointStroke: '#ca8a04', projectionLine: '#888888', // AHORA AMARILLO
                 vectorPos: '#a7f3d0', // mint
                 vectorVelMCU: '#c4b5fd', // violet
                 vectorAccMCU: '#fdba74', // orange
